@@ -95,5 +95,14 @@ function addComment(index) {
     localStorage.setItem('posts', JSON.stringify(posts));
     document.getElementById(`comment-content-${index}`).value = '';
     loadPosts();
-  }
+  }document.addEventListener('DOMContentLoaded', function () {
+  const likeButtons = document.querySelectorAll('.like-button');
+
+  likeButtons.forEach(button => {
+    button.addEventListener('click', function () {
+      const heartIcon = this.querySelector('.heart-icon');
+      heartIcon.classList.toggle('glowing');
+    });
+  });
+});
 }
