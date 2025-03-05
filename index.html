@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patwa.Toli Premium Social</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Login Section -->
+  <div class="login-container" id="login">
+    <h1>Patwa.Toli Premium Access</h1>
+    <form id="login-form">
+      <input type="text" id="username" placeholder="Enter your community ID" required>
+      <input type="password" id="password" placeholder="Enter your membership code" required>
+      <button type="submit">Access Social Media</button>
+    </form>
+  </div>
+
+  <!-- Main App Section -->
+  <div class="app-container" id="app" style="display:none">
+    <header>
+      <h1>Welcome to Patwa.Toli Social</h1>
+      <button id="logout">Logout</button>
+    </header>
+    <div class="content">
+      <div class="post-form">
+        <textarea id="post-content" placeholder="What's on your mind?" required></textarea>
+        <button id="post-button">Post</button>
+      </div>
+      <div class="posts" id="posts">
+        <!-- Posts will be dynamically added here -->
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
