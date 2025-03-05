@@ -1,34 +1,43 @@
+// Utility function to sanitize user input to prevent XSS
+function sanitizeInput(input) {
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(input));
+  return div.innerHTML;
+}
+
+// Utility function to hash passwords for basic security
+function hashPassword(password) {
+  return btoa(password); // Base64 encoding as a simple hash substitute (for demo purposes only)
+}
+
 // Sample client-side authentication for demonstration
 document.getElementById('login-form').addEventListener('submit', function(event) {
   event.preventDefault();
-  
+
   // Retrieve user inputs
-  const username = document.getElementById('username').value.trim();
-  const password = document.getElementById('password').value.trim();
-  
-  /*
-    For this demo, we're hardcoding valid credentials.
-    In a production app, you would implement proper server-side authentication.
-    Valid credentials for demonstration:
-      Community ID: "PatwaToliMember"
-      Membership Code: "premium2025"
-  */
-  if (username === "PatwaToliMember" && password === "premium2025") {
+  const username = sanitizeInput(document.getElementById('login-username').value.trim());
+  const password = hashPassword(sanitizeInput(document.getElementById('login-password').value.trim()));
+
+  // Retrieve stored users
+  const users = JSON.parse(localStorage.getItem('users')) || {};
+
+  if (users[username] && users[username].password === password) {
     // Store user session and show the main Social Media interface
-    localStorage.setItem('loggedIn', 'true');
+    localStorage.setItem('loggedIn', username);
     showApp();
   } else {
-    alert("Access Denied. Incorrect membership credentials.");
+    alert("Invalid username or password.");
   }
 });
 
 // Show the app if the user is logged in
-if (localStorage.getItem('loggedIn') === 'true') {
+if (localStorage.getItem('loggedIn')) {
   showApp();
 }
 
 function showApp() {
   document.getElementById('login').style.display = 'none';
+  document.getElementById('signup').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   loadPosts();
 }
@@ -39,15 +48,65 @@ document.getElementById('logout').addEventListener('click', function() {
   location.reload();
 });
 
+// Sign-Up functionality
+document.getElementById('signup-form').addEventListener('submit', function(event) {
+  event.preventDefault();
+
+  // Retrieve user inputs
+  const username = sanitizeInput(document.getElementById('signup-username').value.trim());
+  const password = hashPassword(sanitizeInput(document.getElementById('signup-password').value.trim()));
+
+  // Retrieve stored users
+  const users = JSON.parse(localStorage.getItem('users')) || {};
+
+  if (users[username]) {
+    alert("Username already exists. Please choose a different username.");
+  } else {
+    users[username] = { password: password };
+    localStorage.setItem('users', JSON.stringify(users));
+    alert("Sign-Up successful. Please login.");
+    document.getElementById('show-login').click();
+  }
+});
+
+// Toggle between login and sign-up forms
+document.getElementById('show-signup').addEventListener('click', function() {
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('signup').style.display = 'block';
+});
+
+document.getElementById('show-login').addEventListener('click', function() {
+  document.getElementById('signup').style.display = 'none';
+  document.getElementById('login').style.display = 'block';
+});
+
 // Post functionality
 document.getElementById('post-button').addEventListener('click', function() {
-  const postContent = document.getElementById('post-content').value.trim();
-  if (postContent) {
+  const postContent = sanitizeInput(document.getElementById('post-content').value.trim());
+  const postMedia = document.getElementById('post-media').files[0];
+
+  if (postContent || postMedia) {
     const posts = JSON.parse(localStorage.getItem('posts')) || [];
-    posts.push({ content: postContent, likes: 0, comments: [] });
-    localStorage.setItem('posts', JSON.stringify(posts));
-    document.getElementById('post-content').value = '';
-    loadPosts();
+    const reader = new FileReader();
+
+    reader.onload = function(event) {
+      posts.push({
+        content: postContent,
+        media: event.target.result,
+        likes: 0,
+        comments: []
+      });
+      localStorage.setItem('posts', JSON.stringify(posts));
+      document.getElementById('post-content').value = '';
+      document.getElementById('post-media').value = '';
+      loadPosts();
+    };
+
+    if (postMedia) {
+      reader.readAsDataURL(postMedia);
+    } else {
+      reader.onload({ target: { result: null } });
+    }
   }
 });
 
@@ -60,12 +119,13 @@ function loadPosts() {
     postElement.className = 'post';
     postElement.innerHTML = `
       <div class="post-content">${post.content}</div>
+      ${post.media ? `<img src="${post.media}" class="post-media">` : ''}
       <div class="post-actions">
         <button onclick="likePost(${index})">Like (${post.likes})</button>
         <button onclick="showCommentBox(${index})">Comment</button>
       </div>
       <div class="comments" id="comments-${index}">
-        ${post.comments.map(comment => `<div class="comment">${comment}</div>`).join('')}
+        ${post.comments.map(comment => `<div class="comment">${sanitizeInput(comment)}</div>`).join('')}
       </div>
       <div class="comment-box" id="comment-box-${index}" style="display:none">
         <textarea id="comment-content-${index}" placeholder="Write a comment..."></textarea>
@@ -88,21 +148,12 @@ function showCommentBox(index) {
 }
 
 function addComment(index) {
-  const commentContent = document.getElementById(`comment-content-${index}`).value.trim();
+  const commentContent = sanitizeInput(document.getElementById(`comment-content-${index}`).value.trim());
   if (commentContent) {
     const posts = JSON.parse(localStorage.getItem('posts')) || [];
     posts[index].comments.push(commentContent);
     localStorage.setItem('posts', JSON.stringify(posts));
     document.getElementById(`comment-content-${index}`).value = '';
     loadPosts();
-  }document.addEventListener('DOMContentLoaded', function () {
-  const likeButtons = document.querySelectorAll('.like-button');
-
-  likeButtons.forEach(button => {
-    button.addEventListener('click', function () {
-      const heartIcon = this.querySelector('.heart-icon');
-      heartIcon.classList.toggle('glowing');
-    });
-  });
-});
+  }
 }
